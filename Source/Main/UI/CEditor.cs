@@ -8499,14 +8499,23 @@ namespace CharacterEditor
 					for (int index = 0; index < numSlots; ++index)
 					{
 						int currentSlot = index;
-						floatMenuOptionList.Add(new FloatMenuOption(SlotLabel(currentSlot, true), (() =>
+						floatMenuOptionList.Add(new FloatMenuOption(SlotLabel(currentSlot, true), () =>
 						{
 							int num = currentSlot;
-							if (Event.current.control)
-								CEditor.API.SetSlot(num, "", true);
-							else
-								new PresetPawn().SavePawn(CEditor.API.Pawn, num);
-						})));
+							try
+							{
+								if (Event.current.control)
+									CEditor.API.SetSlot(num, "", true);
+								else
+									new PresetPawn().SavePawn(CEditor.API.Pawn, num);
+							}
+							catch (Exception e)
+							{
+								Log.Message("Got exception while saving!");
+								Log.Message(e);
+							}
+
+						}));
 					}
 					WindowTool.Open(new FloatMenu(floatMenuOptionList));
 				}

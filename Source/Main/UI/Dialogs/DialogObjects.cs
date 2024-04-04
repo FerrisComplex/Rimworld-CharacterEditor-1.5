@@ -180,7 +180,7 @@ internal class DialogObjects : DialogTemplate<ThingDef>
    internal override int DrawCustomFilter(int x, int y, int w)
 		{
 			Text.Font = GameFont.Small;
-			Rect rect = new Rect((float)x, (float)y, (float)w, 30f);
+			Rect rect = new Rect(x, y, w, 30f);
 			int result = 0;
 			if (this.mDialogType == DialogType.Weapon)
 			{

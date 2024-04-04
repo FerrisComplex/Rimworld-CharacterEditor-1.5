@@ -839,26 +839,47 @@ namespace CharacterEditor
 			select td).ToList<ThingDef>();
 		}
 
+
+		internal static bool isValidWeapon(ThingDef thing, string modname, WeaponType weaponType)
+		{
+			if (!modname.NullOrEmpty() && !thing.IsFromMod(modname))
+				return false;
+			if (thing.IsMeleeWeapon && weaponType == WeaponType.Melee)
+				return true;
+			if (thing.IsRangedWeapon && weaponType == WeaponType.Ranged && !PresetObject.DicGunAndTurret.Values.Contains(thing))
+				return true;
+			if (thing.IsTurret() && weaponType == WeaponType.Turret)
+				return true;
+			if (thing.IsRangedWeapon && weaponType == WeaponType.TurretGun && PresetObject.DicGunAndTurret.Values.Contains(thing))
+				return true;
+			return false;
+		}
 		
 		internal static HashSet<ThingDef> ListOfWeapons(string modname, WeaponType weaponType)
 		{
-			Dictionary<string, ThingDef> dicTurrets = PresetObject.DicGunAndTurret;
-			bool bAll1 = modname.NullOrEmpty();
-			return (from td in DefDatabase<ThingDef>.AllDefs
-			where !td.label.NullOrEmpty() && ((td.IsMeleeWeapon && weaponType == WeaponType.Melee) || (td.IsRangedWeapon && weaponType == WeaponType.Ranged && !dicTurrets.Values.Contains(td)) || (td.IsTurret() && weaponType == WeaponType.Turret) || (td.IsRangedWeapon && weaponType == WeaponType.TurretGun && dicTurrets.Values.Contains(td))) && (bAll1 || td.IsFromMod(modname))
-			orderby td.label
-			select td).ToHashSet<ThingDef>();
+			HashSet<ThingDef> output = new HashSet<ThingDef>();
+			foreach (var v in DefDatabase<ThingDef>.AllDefs)
+			{
+				if (v == null || v.label.NullOrEmpty() || v.defName.NullOrEmpty() || !isValidWeapon(v, modname, weaponType)) continue;
+				output.Add(v);
+			}
+			return output.OrderBy(x => x.label).ToHashSet();
 		}
 
 		
 		internal static HashSet<ThingDef> ListOfBullets(ThingCategoryDef tc, string modname)
 		{
+			HashSet<ThingDef> output = new HashSet<ThingDef>();
 			bool bAll1 = modname.NullOrEmpty();
 			bool bAll2 = tc == null;
-			return (from td in DefDatabase<ThingDef>.AllDefs
-			where td.IsBullet() && !td.label.NullOrEmpty() && (bAll1 || td.IsFromMod(modname)) && (bAll2 || (!td.thingCategories.NullOrEmpty<ThingCategoryDef>() && td.thingCategories.Contains(tc)))
-			orderby td.label
-			select td).ToHashSet<ThingDef>();
+			foreach (var v in DefDatabase<ThingDef>.AllDefs)
+			{
+				if (v == null || v.label.NullOrEmpty() || v.defName.NullOrEmpty() || !v.IsBullet()) continue;
+				if (!bAll1 && !v.IsFromMod(modname)) continue;
+				if (!bAll2 && (v.thingCategories.NullOrEmpty() || !v.thingCategories.Contains(tc))) continue;
+				output.Add(v);
+			}
+			return output.OrderBy(x => x.label).ToHashSet();
 		}
 
 		

@@ -134,18 +134,5 @@ LANGUAGES
 SPECIAL THANKS TO
 • Proxyer for japanese translation
 • 黄俊浩 for simplified chinese translation
-
-
-CHANGES OF LAST UPDATE
-• 2023-08-09 build 1241
-- fixed bug causing no ingredients in recipes with empty cost list
-- xenotype-editor dialog is draggable now
-- for modders: added public static class 'CustomLabel' with methods to set the labels used in character editor
-  * LoadLabelsFromFile(string path) - can change all used labels at once (a sample file is in 'Defs' folder of this mod)
-  * GetLabel(string labelName) - can get a label
-  * SetLabel(string labelName, string text) - can set a label
-• 2023-08-11 build 1242
-- fixed bug that reverted saved changes, when changes were applied to a previously already changed object
-- when the toggle button for stat factors is active, it now also enables the override mode for object values. in override mode, values can be set beyond the allowed min and max game parameters
 </description>
 </ModMetaData>

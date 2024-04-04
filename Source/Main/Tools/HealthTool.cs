@@ -186,42 +186,34 @@ internal static class HealthTool
     {
         if (h == null || h.def.IsNullOrEmpty())
             return "";
-        var str1 = "" + h.def.defName + "|" + h.Severity + "|" + (h.Part != null ? h.Part.def.defName : "") + "|";
-        int num;
-        string str2;
-        if (h.Part == null)
-        {
-            str2 = "";
-        }
+        var output = h.def.defName + "|" + h.Severity + "|" + (h.Part != null && h.Part.def != null && !string.IsNullOrEmpty(h.Part.def.defName) ? h.Part.def.defName : "") + "|";
+        if (h.Part == null) 
+            output += "|";
         else
-        {
-            num = h.Part.Index;
-            str2 = num.ToString();
-        }
-
-        var str3 = str1 + str2 + "|" + (h.IsPermanent() ? "1" : "0") + "|";
-        num = h.GetLevel();
-        var str4 = num.ToString();
-        var str5 = str3 + str4 + "|";
-        num = h.GetPainValue();
-        var str6 = num.ToString();
-        var str7 = str5 + str6 + "|";
-        num = h.GetDuration();
-        var str8 = num.ToString();
-        return str7 + str8 + "|" + h.GetOtherPawn().GetPawnNameAsSeparatedString();
+            output += h.Part.Index + "|";
+        
+        output += (h.IsPermanent() ? "1" : "0") + "|";
+        output += h.GetLevel() + "|";
+        output += h.GetPainValue() + "|";
+        output += h.GetDuration() + "|";
+        output += h.GetOtherPawn().GetPawnNameAsSeparatedString();
+        return output;
     }
 
     internal static string GetAllHediffsAsSeparatedString(this Pawn p)
     {
-        if (!p.HasHealthTracker() || p.health.hediffSet.hediffs.NullOrEmpty())
+        if (p == null || !p.HasHealthTracker() || p.health.hediffSet.hediffs.NullOrEmpty())
             return "";
         var text = "";
         foreach (var hediff in p.health.hediffSet.hediffs)
         {
-            text += hediff.GetHediffAsSeparatedString();
-            text += ":";
+            if (hediff == null) continue;
+            var v = hediff.GetHediffAsSeparatedString();
+            if (string.IsNullOrEmpty(v)) continue;
+            text += v + ":";
         }
 
+     
         return text.SubstringRemoveLast();
     }
 
@@ -667,17 +659,16 @@ internal static class HealthTool
 
     internal static int GetLevel(this Hediff h)
     {
-        var num = -1;
-        if (h != null && h.def.IsHediffWithLevel())
-            num = h.GetLevel();
-        return num;
+        if (h == null || !h.def.IsHediffWithLevel())
+            return -1;
+        return ((Hediff_Level)h).level;
     }
 
     internal static void SetLevel(this Hediff h, int val)
     {
         if (h == null || val < 0 || !h.def.IsHediffWithLevel())
             return;
-        h.SetLevel(val);
+        ((Hediff_Level)h).SetLevelTo(val);
         h.Severity = val;
     }
 

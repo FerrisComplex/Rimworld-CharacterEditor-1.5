@@ -15,12 +15,13 @@ namespace CharacterEditor;
 internal class PresetPawn
 {
     internal bool bPlace;
-    internal SortedDictionary<Param, string> dicParams;
+    internal SortedDictionary<Param, string> dicParams = new SortedDictionary<Param, string>();
     internal Pawn pawn;
     private bool setBodyParts;
 
     internal PresetPawn()
     {
+        Log.Message("Creating preset pawn!");
         pawn = null;
         bPlace = false;
         setBodyParts = true;
@@ -82,7 +83,6 @@ internal class PresetPawn
             GeneratePawn();
             PawnxTool.AddOrCreateExistingPawn(this);
         }
-
         return pawn;
     }
 
@@ -107,7 +107,6 @@ internal class PresetPawn
         dicParams.Add(Param.P13_gradientmask, p.GetGradientMask());
         dicParams.Add(Param.P14_haircolor1, p.GetHairColor(true).ColorHexString());
         dicParams.Add(Param.P15_haircolor2, p.GetHairColor(false).ColorHexString());
-        dicParams.Add(Param.P16_melanin, "-1");
         dicParams.Add(Param.P17_skincolor1, p.GetSkinColor(true).ColorHexString());
         dicParams.Add(Param.P18_skincolor2, p.GetSkinColor(false).ColorHexString());
         dicParams.Add(Param.P19_eyecolor, p.GetEyeColor().ColorHexString());
