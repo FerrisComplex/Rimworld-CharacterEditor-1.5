@@ -1519,10 +1519,18 @@ internal static class ThingTool
 					{
 						thingDef.minifiedDef = ThingDefOf.MinifiedThing;
 					}
-					thingDef.RegisterBuildingDef();
-					thingDef.designationCategory.ResolveReferences();
-					thingDef.designationCategory.PostLoad();
-				}
+
+                    try
+                    {
+                        thingDef.RegisterBuildingDef();
+                        thingDef.designationCategory.ResolveReferences();
+                        thingDef.designationCategory.PostLoad();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Message("Failed to generate building def!" + "\n" + e.ToString());
+                    }
+                }
 				catch (Exception ex)
 				{
 					if (Prefs.DevMode)
@@ -1540,15 +1548,18 @@ internal static class ThingTool
             Type typeFromHandle = typeof(ThingDefGenerator_Buildings);
             object[] param = new object[]
             {
-                td
+                td,
+                false
             };
             td.frameDef = (ThingDef)typeFromHandle.CallMethod("NewFrameDef_Thing", param);
             td.frameDef.ResolveReferences();
             td.frameDef.PostLoad();
-            object[] array = new object[3];
-            array[0] = td;
-            array[1] = false;
-            object[] param2 = array;
+            object[] param2 = new object[]
+            {
+                td,
+                false,
+                false
+            };
             td.blueprintDef = (ThingDef)typeFromHandle.CallMethod("NewBlueprintDef_Thing", param2);
             td.blueprintDef.entityDefToBuild = td;
             td.blueprintDef.ResolveReferences();
@@ -1560,7 +1571,8 @@ internal static class ThingTool
                 {
                     td,
                     true,
-                    td.blueprintDef
+                    td.blueprintDef,
+                    false
                 };
                 thingDef = (ThingDef)typeFromHandle.CallMethod("NewBlueprintDef_Thing", param3);
                 thingDef.ResolveReferences();
