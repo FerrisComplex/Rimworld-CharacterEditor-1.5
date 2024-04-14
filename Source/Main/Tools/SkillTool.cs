@@ -112,6 +112,37 @@ namespace CharacterEditor
 				p.skills.skills.Add(skillRecord);
 			}
 		}
+        
+		
+		public static bool GetSkillRaw(this Pawn pawn, SkillDef skillDef, out SkillRecord output)
+		{
+			for (int index = 0; index < pawn.skills.skills.Count; ++index)
+			{
+				if (pawn.skills.skills[index].def == skillDef)
+				{
+					output = pawn.skills.skills[index];
+					return true;
+				}
+			}
+
+			output = null;
+			return false;
+		}
+
+        
+		public static List<SkillRecord> getAllSkills(this Pawn p)
+		{
+			List<SkillRecord> output = new List<SkillRecord>();
+            
+            foreach (var v in DefDatabase<SkillDef>.AllDefsListForReading)
+            {
+	            if (v == null) continue;
+	            if (p.GetSkillRaw(v, out var result))
+		            output.Add(result);
+            }
+
+            return output;
+		}
 
 		
 		public static void CopySkillFromSkillRecord(this Pawn p, SkillRecord sr)

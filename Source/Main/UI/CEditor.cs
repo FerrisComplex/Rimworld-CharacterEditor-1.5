@@ -4235,12 +4235,85 @@ namespace CharacterEditor
                 }
 
 
+                private int CURRENT_SKILL_PAGE = 0;
+                private readonly int MAX_SKILLS_PER_PAGE = 12;
+
+                private void ANextSkills()
+                {
+                    if (CEditor.API.Pawn == null || CEditor.API.Pawn.skills == null) return;
+                    double maxPages = CEditor.API.Pawn.skills.skills.Count / (double)MAX_SKILLS_PER_PAGE;
+                    var realMaxPage = maxPages % 1 > 0 ? ((int)maxPages + 1) : (int)maxPages;
+
+                    if (CURRENT_SKILL_PAGE + 1 <= realMaxPage)
+                        CURRENT_SKILL_PAGE += 1;
+                }
+
+                private void APrevSkills()
+                {
+                    if (CEditor.API.Pawn == null || CEditor.API.Pawn.skills == null) return;
+                    if (CURRENT_SKILL_PAGE > 0)
+                        CURRENT_SKILL_PAGE -= 1;
+                }
+                
+                
+                private static FieldInfo levelLabelWidthField = typeof(SkillUI).GetField("levelLabelWidth", BindingFlags.NonPublic | BindingFlags.Static);
+
+                public static void DrawSkillsOf(Pawn p, List<SkillRecord> skills, Vector2 offset, SkillUI.SkillDrawMode mode, Rect container, int startIndex = 0, int maxIndex = -1)
+                {
+                    Verse.Text.Font = GameFont.Small;
+                    if (p.DevelopmentalStage.Baby())
+                    {
+                        Color color = GUI.color;
+                        GUI.color = Color.gray;
+                        int anchor = (int)Verse.Text.Anchor;
+                        Verse.Text.Anchor = TextAnchor.MiddleCenter;
+                        Widgets.Label(new Rect(offset.x, offset.y, 230f, container.height), "SkillsDevelopLaterBaby".Translate());
+                        GUI.color = color;
+                        Verse.Text.Anchor = (TextAnchor)anchor;
+                    }
+                    else
+                    {
+                        float levelLabelWidth = -1;
+                        for (int index = startIndex; index < maxIndex; ++index)
+                        {
+                            float x = Verse.Text.CalcSize(skills[index].def.skillLabel.CapitalizeFirst()).x;
+                            if (x > levelLabelWidth)
+                                levelLabelWidth = x;
+                        }
+
+                        try
+                        {
+                            // Set field width, this is private so try doing it via reflection :shrug:
+                            levelLabelWidthField.SetValue(null, levelLabelWidth);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Message("Failed to set levelLabelWidth in SkillUI \n" + e);
+                        }
+                        for (int index = startIndex; index < maxIndex; ++index)
+                        {
+                
+                            float y = (float)(index - startIndex) * 27f + offset.y;
+                            SkillUI.DrawSkill(skills[index], new Vector2(offset.x, y), mode);
+                        }
+                    }
+                }
+
+
                 private void DrawSkills(int x, int y)
                 {
                     try
                     {
                         if (CEditor.API.Pawn.skills != null)
                         {
+                            var pawnSkills = CEditor.API.Pawn.getAllSkills();
+
+                            int _tmp = (pawnSkills.Count() / MAX_SKILLS_PER_PAGE);
+                            int maxPage = (int)_tmp + (_tmp - (int)_tmp > 0 ? 1 : 0);
+
+                            int wantedIndex = Math.Max(0, CURRENT_SKILL_PAGE * MAX_SKILLS_PER_PAGE);
+                            int startIndex = Math.Min(wantedIndex, pawnSkills.Count);
+                            int maxIndex = Math.Min(startIndex + MAX_SKILLS_PER_PAGE, pawnSkills.Count);
                             Text.Font = GameFont.Medium;
                             Widgets.Label(new Rect((float)x, (float)y, 200f, 30f), "Skills".Translate());
                             y += 35;
@@ -4248,46 +4321,31 @@ namespace CharacterEditor
                             BackstoryDef backstory2 = CEditor.API.Pawn.story.GetBackstory(BackstorySlot.Childhood);
                             float num = (float)Reflect.GetAType("RimWorld", "SkillUI").GetMemberValue("levelLabelWidth");
                             float num2 = (234f - num - 35f) / 20f;
-                            using (List<SkillRecord>.Enumerator enumerator = CEditor.API.Pawn.skills.skills.GetEnumerator())
+
+                            for (int i = startIndex; i < startIndex + MAX_SKILLS_PER_PAGE; i++)
                             {
-                                while (enumerator.MoveNext())
+                                try
                                 {
-                                    SkillRecord skillRecord = enumerator.Current;
+                                    var skillRecord = pawnSkills[i];
                                     int num3 = (int)skillRecord.GetMemberConstValue("MaxLevel");
                                     num2 = (234f - num - 35f) / (float)num3;
-                                    int num6 = (backstory == null)
-                                        ? 0
-                                        : backstory.skillGains.Sum(delegate(SkillGain t)
-                                        {
-                                            if (t.skill != skillRecord.def)
-                                            {
-                                                return 0;
-                                            }
-
-                                            return t.amount;
-                                        });
-                                    int num4 = (backstory2 == null)
-                                        ? 0
-                                        : backstory2.skillGains.Sum(delegate(SkillGain t)
-                                        {
-                                            if (t.skill != skillRecord.def)
-                                            {
-                                                return 0;
-                                            }
-
-                                            return t.amount;
-                                        });
+                                    int num6 = (backstory == null) ? 0 : backstory.skillGains.Sum(t => (t.skill != skillRecord.def) ? 0 : t.amount);
+                                    int num4 = (backstory2 == null) ? 0 : backstory2.skillGains.Sum(t => (t.skill != skillRecord.def) ? 0 : t.amount);
                                     int traitOffsetForSkill = CEditor.API.Pawn.GetTraitOffsetForSkill(skillRecord.def);
                                     int aptitude = skillRecord.Aptitude;
                                     int num5 = num6 + num4 + traitOffsetForSkill + aptitude;
-                                    float y2 = (float)(y + skillRecord.def.GetSkillIndex() * 27);
-                                    SZWidgets.LabelBackground(new Rect((float)x + num + 35f, y2, num2 * (float)num5, 24f), "", (num5 < 0) ? new Color(0.5f, 0f, 0f, 0.25f) : new Color(0f, 0.5f, 0f, 0.15f), 0, "", default(Color));
+                                    //    skillRecord.def.GetSkillIndex() -> i
+                                    SZWidgets.LabelBackground(new Rect((float)x + num + 35f, (y + i * 27), num2 * (float)num5, 24f), "", (num5 < 0) ? new Color(0.5f, 0f, 0f, 0.25f) : new Color(0f, 0.5f, 0f, 0.15f), 0, "", default(Color));
+                                }
+                                catch (Exception)
+                                {
                                 }
                             }
 
+
                             try
                             {
-                                SkillUI.DrawSkillsOf(CEditor.API.Pawn, new Vector2((float)x, (float)y), SkillUI.SkillDrawMode.Menu, new Rect((float)x, (float)y, 200f, 30f));
+                                DrawSkillsOf(CEditor.API.Pawn, pawnSkills, new Vector2((float)x, (float)y), SkillUI.SkillDrawMode.Menu, new Rect((float)x, (float)y, 200f, 30f), startIndex, maxIndex);
                             }
                             catch (Exception ex)
                             {
@@ -4297,34 +4355,57 @@ namespace CharacterEditor
                                 }
                             }
 
-                            foreach (SkillRecord skillRecord2 in CEditor.API.Pawn.skills.skills)
+                            for (int i = startIndex; i < maxIndex; i++)
                             {
-                                float y3 = (float)(y + skillRecord2.def.GetSkillIndex() * 27);
-                                SZWidgets.ButtonInvisibleVar<SkillRecord>(new Rect((float)x, y3, num + 35f, 24f), new Action<SkillRecord>(this.ATogglePassion), skillRecord2, "");
-                                if (this.iTickInputSkill > 0)
+                                try
                                 {
-                                    skillRecord2.levelInt = SZWidgets.NumericTextField((float)x + num + 18f, y3, 40f, 24f, skillRecord2.levelInt, 0, 9999);
-                                    this.iTickInputSkill--;
-                                }
-                                else
-                                {
-                                    SZWidgets.ButtonInvisibleVar<SkillRecord>(new Rect((float)x + num + 40f, y3, (float)(x + 180) - ((float)x + num + 40f), 24f), new Action<SkillRecord>(this.ASetSkillNumeric), skillRecord2, "");
-                                }
+                                    SkillRecord skillRecord = pawnSkills[i];
+                                    float y3 = (float)(y + (i - startIndex) * 27);
+                                    SZWidgets.ButtonInvisibleVar<SkillRecord>(new Rect((float)x, y3, num + 35f, 24f), new Action<SkillRecord>(this.ATogglePassion), skillRecord, "");
+                                    if (this.iTickInputSkill > 0)
+                                    {
+                                        skillRecord.levelInt = SZWidgets.NumericTextField((float)x + num + 18f, y3, 40f, 24f, skillRecord.levelInt, 0, (int)skillRecord.GetMemberConstValue("MaxLevel"));
+                                        this.iTickInputSkill--;
+                                    }
+                                    else
+                                    {
+                                        SZWidgets.ButtonInvisibleVar<SkillRecord>(new Rect((float)x + num + 40f, y3, (float)(x + 180) - ((float)x + num + 40f), 24f), new Action<SkillRecord>(this.ASetSkillNumeric), skillRecord, "");
+                                    }
 
-                                SZWidgets.ButtonImageVar<SkillRecord>((float)(x + 210), y3, 24f, 24f, "UI/Buttons/Dev/Add", new Action<SkillRecord>(this.AAddSkillLevel), skillRecord2, "");
-                                SZWidgets.ButtonImageVar<SkillRecord>((float)(x + 185), y3, 24f, 24f, "bminus", new Action<SkillRecord>(this.ASubSkillLevel), skillRecord2, "");
-                                TooltipHandler.TipRegion(new Rect((float)x, y3, num + 80f, 24f), CEditor.API.Pawn.GetTooltipForSkillpoints(skillRecord2));
+                                    SZWidgets.ButtonImageVar<SkillRecord>((float)(x + 210), y3, 24f, 24f, "UI/Buttons/Dev/Add", new Action<SkillRecord>(this.AAddSkillLevel), skillRecord, "");
+                                    SZWidgets.ButtonImageVar<SkillRecord>((float)(x + 185), y3, 24f, 24f, "bminus", new Action<SkillRecord>(this.ASubSkillLevel), skillRecord, "");
+                                    TooltipHandler.TipRegion(new Rect((float)x, y3, num + 80f, 24f), CEditor.API.Pawn.GetTooltipForSkillpoints(skillRecord));
+                                }
+                                catch (Exception)
+                                {
+                                }
                             }
 
                             SZWidgets.ButtonImage((float)(x + 210), (float)(y - 32), 18f, 24f, "UI/Buttons/Copy", new Action(this.ACopySkills), "", default(Color));
+                            int XIndexNow = 190;
                             if (!this.lOfCopySkills.NullOrEmpty<SkillRecord>())
                             {
                                 SZWidgets.ButtonImage((float)(x + 190), (float)(y - 32), 18f, 24f, "UI/Buttons/Paste", new Action(this.APasteSkills), "", default(Color));
+                                XIndexNow -= 20;
                             }
 
                             if (CEditor.IsRandom)
                             {
-                                SZWidgets.ButtonImage((float)(x + 163), (float)(y - 32), 25f, 25f, "brandom", new Action(this.ARandomSkills), "", default(Color));
+                                SZWidgets.ButtonImage((float)(x + XIndexNow), (float)(y - 32), 18f, 24f, "brandom", new Action(this.ARandomSkills), "", default(Color));
+                                XIndexNow -= 20;
+                            }
+
+                            //Log.Message("Testing size: " + (startIndex + MAX_SKILLS_PER_PAGE) + " < " + pawnSkills.Count);
+                            if (startIndex + MAX_SKILLS_PER_PAGE < pawnSkills.Count)
+                            {
+                                SZWidgets.ButtonImage((float)(x + XIndexNow), (float)(y - 32), 18f, 24f, "bforward", new Action(this.ANextSkills), "Next Skills", default(Color));
+                                XIndexNow -= 20;
+                            }
+
+                            if (startIndex > 0)
+                            {
+                                SZWidgets.ButtonImage((float)(x + XIndexNow), (float)(y - 32), 18f, 24f, "bbackward", new Action(this.APrevSkills), "Previous Skills", default(Color));
+                                XIndexNow -= 20;
                             }
                         }
                     }
@@ -4341,7 +4422,7 @@ namespace CharacterEditor
                 private void ACopySkills()
                 {
                     this.lOfCopySkills = new List<SkillRecord>();
-                    foreach (SkillRecord item in CEditor.API.Pawn.skills.skills)
+                    foreach (SkillRecord item in CEditor.API.Pawn.getAllSkills())
                     {
                         this.lOfCopySkills.Add(item);
                     }
@@ -4369,29 +4450,15 @@ namespace CharacterEditor
                 }
 
 
+                
+
                 private void ATogglePassion(SkillRecord record)
                 {
-                    bool flag = record.passion == Passion.None;
-                    if (flag)
-                    {
-                        record.passion = Passion.Minor;
-                    }
+                    var current = (int)record.passion;
+                    if (current == (int)Passion.Major)
+                        record.passion = (Passion)0;
                     else
-                    {
-                        bool flag2 = record.passion == Passion.Minor;
-                        if (flag2)
-                        {
-                            record.passion = Passion.Major;
-                        }
-                        else
-                        {
-                            bool flag3 = record.passion == Passion.Major;
-                            if (flag3)
-                            {
-                                record.passion = Passion.None;
-                            }
-                        }
-                    }
+                        record.passion = (Passion)(current + 1);
                 }
 
 

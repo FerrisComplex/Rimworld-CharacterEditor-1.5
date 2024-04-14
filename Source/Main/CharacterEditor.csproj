@@ -433,6 +433,9 @@
       <Reference Include="UnityEngine.XRModule">
         <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.XRModule.dll</HintPath>
       </Reference>
+      <Reference Include="VSE">
+        <HintPath>..\..\..\..\..\..\workshop\content\294100\2854967442\1.5\Assemblies\VSE.dll</HintPath>
+      </Reference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
 </Project>

@@ -84,6 +84,7 @@
 	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=O_003A_005CSteamLibrary_005Csteamapps_005Ccommon_005CRimWorld_005CRimWorldWin64_005FData_005CManaged_005CUnityEngine_002EVRModule_002Edll/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=O_003A_005CSteamLibrary_005Csteamapps_005Ccommon_005CRimWorld_005CRimWorldWin64_005FData_005CManaged_005CUnityEngine_002EWindModule_002Edll/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=O_003A_005CSteamLibrary_005Csteamapps_005Ccommon_005CRimWorld_005CRimWorldWin64_005FData_005CManaged_005CUnityEngine_002EXRModule_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=O_003A_005CSteamLibrary_005Csteamapps_005Cworkshop_005Ccontent_005C294100_005C2854967442_005C1_002E5_005CAssemblies_005CVSE_002Edll/@EntryIndexedValue">True</s:Boolean>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=DF2BD9DB_002D9224_002D4EB0_002DA772_002DD1757C6DCAE2_002Fd_003AUI_002Ff_003ACEditor_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\John\.nuget\packages\lib.harmony\2.2.2\lib\net48\0Harmony.dll" /&gt;&#xD;
