@@ -2003,19 +2003,11 @@ namespace CharacterEditor
                         if (eType == EType.ThoughtMemory || eType == EType.ThoughtMemorySocial || eType == EType.ThoughtSituational || eType == EType.ThoughtSituationalSocial || eType == EType.ThoughtUnsupported || eType == EType.ThoughtsAll)
                         {
                             Dictionary<EType, HashSet<ThoughtDef>> allThoughtLists = MindTool.GetAllThoughtLists();
-                            using (Dictionary<EType, HashSet<ThoughtDef>>.KeyCollection.Enumerator enumerator = allThoughtLists.Keys.GetEnumerator())
-                            {
-                                while (enumerator.MoveNext())
-                                {
-                                    EType etype = enumerator.Current;
-                                    this.AddClassContainer<HashSet<ThoughtDef>>(allThoughtLists[etype], etype);
-                                }
-
-                                goto IL_507;
-                            }
-                        }
-
-                        if (eType == EType.ThingCategoryDef)
+                            foreach (var key in allThoughtLists)
+                                if(key.Value != null)
+                                    this.AddClassContainer(key.Value, key.Key);
+                            
+                        } else if (eType == EType.ThingCategoryDef)
                         {
                             this.AddClassContainer<HashSet<ThingCategoryDef>>((from d in DefTool.AllDefsWithLabelWithNull<ThingCategoryDef>(null)
                                 orderby d != null && d.iconPath.NullOrEmpty()
@@ -2127,8 +2119,7 @@ namespace CharacterEditor
                             this.AddClassContainer<MainButtonDef>(createMainButton2, eType);
                         }
                     }
-
-                    IL_507: ;
+                    
                 }
                 catch (Exception ex)
                 {
@@ -2364,15 +2355,15 @@ namespace CharacterEditor
 
             private void AddClassContainer<T>(T t, EType eType)
             {
-                this.dicData.Add(eType, new ServiceContainer());
-                this.dicData[eType].AddService(typeof(T), t);
+                if(this.dicData.TryAdd(eType, new ServiceContainer()))
+                    this.dicData[eType].AddService(typeof(T), t);
             }
 
 
             private void AddServiceContainer<T>(List<T> l, EType eType)
             {
-                this.dicData.Add(eType, new ServiceContainer());
-                this.dicData[eType].AddService(l.GetType(), l);
+                if(this.dicData.TryAdd(eType, new ServiceContainer()))
+                    this.dicData[eType].AddService(l.GetType(), l);
             }
 
 
