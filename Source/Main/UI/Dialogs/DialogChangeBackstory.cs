@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -141,15 +142,12 @@ internal class DialogChangeBackstory : Window
                 return false;
             return !isFiltered || !td.DisabledWorkTypes.Any();
         }).OrderBy(td => td.title).ToList();
-        var flag1 = selectedCategory == null || selectedCategory == Label.ALL;
-        var flag2 = selectedFilter.Key == null || selectedFilter.Key == Label.ALL;
-        var flag3 = selectedFilter2 == null || selectedFilter2 == Label.ALL;
         foreach (var backstoryDef in list)
         {
             var flag4 = false;
-            if ((flag1 ? 1 : backstoryDef.spawnCategories.Contains(selectedCategory) ? 1 : 0) != 0)
+            if ((selectedCategory == null || selectedCategory == Label.ALL ? 1 : backstoryDef.spawnCategories.Contains(selectedCategory) ? 1 : 0) != 0)
             {
-                if (flag2)
+                if (selectedFilter.Key == null || selectedFilter.Key == Label.ALL)
                 {
                     flag4 = true;
                 }
@@ -176,7 +174,7 @@ internal class DialogChangeBackstory : Window
 
                 if (flag4)
                 {
-                    if (flag3)
+                    if (selectedFilter2 == null || selectedFilter2 == Label.ALL)
                     {
                         flag4 = true;
                     }
@@ -200,7 +198,36 @@ internal class DialogChangeBackstory : Window
 
                 if (flag4)
                 {
-                    this.dicBackstory.Add(backstoryDef, backstoryDef.FullDescriptionFor(CEditor.API.Pawn).Resolve());
+
+                    // This is now ugly as shit, but it works and handles broken patches *Cough* VFECore *Cough*
+                    string fullBackstory = "";
+                    try
+                    {
+                        fullBackstory = backstoryDef.FullDescriptionFor(CEditor.API.Pawn).Resolve();
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            var originalMethod = Harmony.GetOriginalMethod(AccessTools.Method(typeof(BackstoryDef), "FullDescriptionFor"));
+                            fullBackstory = (TaggedString)originalMethod.Invoke(backstoryDef, new object[] {CEditor.API.Pawn});
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                // Try just the root description?
+                                fullBackstory = backstoryDef.description.Formatted(CEditor.API.Pawn.Named("PAWN"));
+                            }
+                            catch (Exception)
+                            {
+                                // This is now ugly as shit but if we are still failing something else is horribly wrong here
+                                fullBackstory = "Failed to generate backstory description for \"" + (backstoryDef == null ? "NullBackstoryDef" : backstoryDef.defName) + "\"";
+                            }
+                        }
+                    }
+                    
+                    this.dicBackstory.Add(backstoryDef, fullBackstory);
                 }
             }
         }
