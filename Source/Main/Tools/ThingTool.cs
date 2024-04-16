@@ -1558,6 +1558,7 @@ internal static class ThingTool
             {
                 td,
                 false,
+                td.blueprintDef, // this one might jsut need to be null?
                 false
             };
             td.blueprintDef = (ThingDef)typeFromHandle.CallMethod("NewBlueprintDef_Thing", param2);
